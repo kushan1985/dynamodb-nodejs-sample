@@ -1,40 +1,51 @@
 const express = require('express');
 const { v4: uuidv4 } = require('uuid');
 const bodyParser = require('body-parser');
-const port = 3000;
-const app = express();
+const port = 3001;
+const cors = require('cors');
 
+const app = express();
+app.use(cors());
 // import the aws sdk to use the dynamodb
 // libraries in the app
 const AWS = require('aws-sdk');
 
 // update the region to 
 // where dynamodb is hosted
-AWS.config.update({ region: 'us-west-2' });
+AWS.config.update({
+    region: "us-east-1"
+    });
 
 // create a new dynamodb client
 // which provides connectivity b/w the app
 // and the db instance
 const client = new AWS.DynamoDB.DocumentClient();
-const tableName = 'MailSources';
+const tableName = 'hackathon_product_views';
 
 app.use(bodyParser.json());
 
-app.get("/rows/all", (req, res) => {
-    var params = {
-        TableName: tableName
-    };
+app.get("/rows/:productId", (req, res) => {
+    // var params = {
+    //     TableName: tableName
+    // };
 
-    client.scan(params, (err, data) => {
+
+    const input = {
+            TableName: "hackathon_product_views",
+            Key: {
+                id: req.params.productId  //{S: "p-kpyfpupzxj161df5"}
+            }
+        }
+        // const command = new GetItemCommand(input);
+
+    client.get(input, (err, data) => {
         if (err) {
+            console.log("Error");
             console.log(err);
         } else {
-            var items = [];
-            for (var i in data.Items)
-                items.push(data.Items[i]['Name']);
-
+            console.log(data);
             res.contentType = 'application/json';
-            res.send(items);
+            res.send(data.Item);
         }
     });
 });
